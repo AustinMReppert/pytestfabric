@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pytestfabric import upload
+from pytestfabric.nbdownloader import download_test_notebooks
 from pytestfabric.nbimport import NotebookFinder
 
 if TYPE_CHECKING:
@@ -90,6 +91,13 @@ def pytest_configure(config: pytest.Config) -> None:
     my_arg = config.getoption("--storage-account")
     if my_arg is None:
         pytest.exit("The --storage-account option is required.", returncode=1)
+
+    workspace_id = config.getoption("--workspace-id")
+    if workspace_id is None:
+        workspace_id = get_workspace_id()
+        config.option.fabric_workspace_id = workspace_id
+
+    download_test_notebooks(workspace_id)
 
 
 @pytest.hookimpl()
