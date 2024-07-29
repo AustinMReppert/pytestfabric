@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pytestfabric"
+name = "pytestmsfabric"
 version = "0.1.0"
 description = ""
 authors = ["Austin M. Reppert <austinmreppert@gmail.com>"]
@@ -17,7 +17,7 @@ pyspark = "^3.4.0"
 azure-storage-file-datalake = "^12.16.0"
 azure-identity = "^1.17.1"
 asyncio = "^3.4.3"
-fabricclientaio = {git = "https://github.com/AustinMReppert/fabric-client-aio"}
+fabricclientaio = "0.1.0"
 
 [tool.ruff]
 line-length = 120
@@ -31,4 +31,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins.pytest11]
-pytestfabric = "pytestfabric.plugin"
+pytestmsfabric = "pytestmsfabric.plugin"

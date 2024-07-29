@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from pytestfabric import upload
-from pytestfabric.nbdownloader import download_test_notebooks
-from pytestfabric.nbimport import NotebookFinder
+from pytestmsfabric import upload
+from pytestmsfabric.nbdownloader import download_test_notebooks
+from pytestmsfabric.nbimport import NotebookFinder
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -512,19 +512,15 @@ version = "0.1.0"
 description = ""
 optional = false
 python-versions = ">=3.11"
-files = []
-develop = false
+files = [
+    {file = "fabricclientaio-0.1.0-py3-none-any.whl", hash = "sha256:d14961e290fd4a2ca47de9f9d5ad4130e9149b52822b28c613f351268b01e1c6"},
+    {file = "fabricclientaio-0.1.0.tar.gz", hash = "sha256:0cbebf7177b42a27d0553a281072de787cdb20294b42bcb3e3df6392539948b8"},
+]
 
 [package.dependencies]
-aiohttp = "^3.9.5"
-azure-identity = "^1.17.1"
-pydantic = "^2.8.2"
-
-[package.source]
-type = "git"
-url = "https://github.com/AustinMReppert/fabric-client-aio"
-reference = "HEAD"
-resolved_reference = "014881b65bbf717287b3cb31f97a0d37c808a1b7"
+aiohttp = ">=3.9.5,<4.0.0"
+azure-identity = ">=1.17.1,<2.0.0"
+pydantic = ">=2.8.2,<3.0.0"
 
 [[package]]
 name = "fastjsonschema"
@@ -1650,4 +1646,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11"
-content-hash = "983945b2b23e57a619417c7c804460cc6d28c3518a27b2c7bd58a8acac7a2a5e"
+content-hash = "05805d3f31245e602a3a5986f228b6791a4d90b3503b0cb3e32cc0a1bc5148ae"
