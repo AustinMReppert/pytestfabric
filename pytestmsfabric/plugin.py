@@ -136,6 +136,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 async def main(
     args: list[str] | os.PathLike[str] | None = None,
     plugins: Sequence[str | object] | None = None,
+    workspace_id: str | None = None,
 ) -> int | pytest.ExitCode:
     """Perform an in-process test run.
 
@@ -146,9 +147,6 @@ async def main(
 
     :returns: An exit code.
     """
-    config = pytest.Config.fromdictargs({"args": args, "plugins": plugins}, [])
-
-    workspace_id = config.getoption("--workspace-id")
     if workspace_id is None:
         workspace_id = get_workspace_id()
 
