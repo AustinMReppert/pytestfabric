@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 import pytest
 
@@ -16,6 +18,9 @@ if TYPE_CHECKING:
 
 from pyspark.sql import SparkSession
 
+sys.meta_path.append(NotebookFinder())
+
+_downloaded_notebooks = False
 
 def get_workspace_id() -> str:
     """Return the workspace ID."""
@@ -85,7 +90,6 @@ def pytest_collect_file(file_path: Path, path: str, parent: pytest.Collector) ->
 @pytest.hookimpl()
 def pytest_configure(config: pytest.Config) -> None:
     """Plugin configuration hook."""
-    sys.meta_path.append(NotebookFinder())
     config.addinivalue_line("markers", "dq: data quality test.")
 
     my_arg = config.getoption("--storage-account")
@@ -97,7 +101,18 @@ def pytest_configure(config: pytest.Config) -> None:
         workspace_id = get_workspace_id()
         config.option.fabric_workspace_id = workspace_id
 
-    download_test_notebooks(workspace_id)
+    global _downloaded_notebooks  # noqa: PLW0603
+    if not _downloaded_notebooks:
+        try:
+            asyncio.get_running_loop()
+            pytest.exit(
+                "pytestmsfabric cannot be run from an existing event loop. Use pytestmsfabric.main.",
+                returncode=1,
+            )
+        except RuntimeError:
+            pass
+        asyncio.run(download_test_notebooks(workspace_id))
+        _downloaded_notebooks = True
 
 
 @pytest.hookimpl()
@@ -117,3 +132,29 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         session.config.option.fabric_folder,
     )
 
+
+async def main(
+    args: list[str] | os.PathLike[str] | None = None,
+    plugins: Sequence[str | object] | None = None,
+) -> int | pytest.ExitCode:
+    """Perform an in-process test run.
+
+    :param args:
+        List of command line arguments. If `None` or not given, defaults to reading
+        arguments directly from the process command line (:data:`sys.argv`).
+    :param plugins: List of plugin objects to be auto-registered during initialization.
+
+    :returns: An exit code.
+    """
+    config = pytest.Config.fromdictargs({"args": args, "plugins": plugins}, [])
+
+    workspace_id = config.getoption("--workspace-id")
+    if workspace_id is None:
+        workspace_id = get_workspace_id()
+
+    global _downloaded_notebooks  # noqa: PLW0603
+    await download_test_notebooks(workspace_id)
+
+    _downloaded_notebooks = True
+
+    return pytest.main(args=args, plugins=plugins)
