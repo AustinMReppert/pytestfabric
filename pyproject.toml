@@ -17,6 +17,7 @@ pyspark = "^3.4.0"
 azure-storage-file-datalake = "^12.16.0"
 azure-identity = "^1.17.1"
 asyncio = "^3.4.3"
+fabricclientaio = {git = "https://github.com/AustinMReppert/fabric-client-aio"}
 
 [tool.ruff]
 line-length = 120
