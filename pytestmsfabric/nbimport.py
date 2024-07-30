@@ -13,6 +13,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Sequence
 
+from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from nbformat import NotebookNode, read
 
@@ -35,6 +36,7 @@ class NotebookLoader(importlib.abc.Loader):
         module = ModuleType(spec.name)
         module.__file__ = spec.origin
         module.__loader__ = spec.loader
+        module.__dict__["get_ipython"] = get_ipython
 
         return module
 
@@ -60,6 +62,10 @@ class NotebookLoader(importlib.abc.Loader):
                     code = self.shell.input_transformer_manager.transform_cell(cell.source)
                     # Run the code in the module.
 
+                    if code.lstrip().startswith("await"):
+                        # Skip top level await. Todo: Use a real parser.
+                        continue
+
                     # Execute the code in the module.
                     exec(code, module.__dict__)  # noqa: S102
         finally:
@@ -84,11 +90,16 @@ class NotebookFinder(importlib.abc.MetaPathFinder):
         """Create a ModuleSpec for the specified notebook if it exists."""
         file_name = fullname.rsplit(".", 1)[-1] + ".ipynb"
 
+        is_test = file_name.startswith("test_")
+
         search_dir = Path()
         if path:
             search_dir = search_dir.joinpath(*path)
 
-        file_path = search_dir / file_name
+        file_path = search_dir / "builtin"
+        if is_test:
+            file_path = file_path / "tests"
+        file_path = file_path / file_name
 
         if file_path in self._module_spec_cache:
             return self._module_spec_cache[file_path]

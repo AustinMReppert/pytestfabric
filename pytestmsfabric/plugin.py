@@ -12,28 +12,14 @@ import pytest
 from pytestmsfabric import upload
 from pytestmsfabric.nbdownloader import download_test_notebooks
 from pytestmsfabric.nbimport import NotebookFinder
+from pytestmsfabric.utils import get_workspace_id
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-from pyspark.sql import SparkSession
-
 sys.meta_path.append(NotebookFinder())
 
-_downloaded_notebooks = False
-
-def get_workspace_id() -> str:
-    """Return the workspace ID."""
-    msg = "You are not running in a Fabric workspace. Please add --workspace-id to the command line."
-    spark = SparkSession.getActiveSession()
-    if spark is None:
-        raise AttributeError(msg)
-
-    res = spark.conf.get("trident.workspace.id")
-    if res is None:
-        raise AttributeError(msg)
-
-    return res
+_started_from_pytestmsfabric_main = False
 
 
 @pytest.hookimpl()
@@ -92,17 +78,13 @@ def pytest_configure(config: pytest.Config) -> None:
     """Plugin configuration hook."""
     config.addinivalue_line("markers", "dq: data quality test.")
 
-    my_arg = config.getoption("--storage-account")
-    if my_arg is None:
-        pytest.exit("The --storage-account option is required.", returncode=1)
-
     workspace_id = config.getoption("--workspace-id")
     if workspace_id is None:
         workspace_id = get_workspace_id()
         config.option.fabric_workspace_id = workspace_id
 
-    global _downloaded_notebooks  # noqa: PLW0603
-    if not _downloaded_notebooks:
+    global _started_from_pytestmsfabric_main  # noqa: PLW0603
+    if not _started_from_pytestmsfabric_main:
         try:
             asyncio.get_running_loop()
             pytest.exit(
@@ -112,7 +94,6 @@ def pytest_configure(config: pytest.Config) -> None:
         except RuntimeError:
             pass
         asyncio.run(download_test_notebooks(workspace_id))
-        _downloaded_notebooks = True
 
 
 @pytest.hookimpl()
@@ -124,13 +105,15 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         msg = "Please install pytest-azurepipelines."
         raise AttributeError(msg) from e
 
-    upload.upload_file(
-        xml_path,
-        session.config.option.fabric_test_id,
-        session.config.option.fabric_storage_account,
-        session.config.option.fabric_container,
-        session.config.option.fabric_folder,
-    )
+    my_arg = session.config.getoption("--storage-account")
+    if my_arg is not None:
+        upload.upload_file(
+            xml_path,
+            session.config.option.fabric_test_id,
+            session.config.option.fabric_storage_account,
+            session.config.option.fabric_container,
+            session.config.option.fabric_folder,
+        )
 
 
 async def main(
@@ -150,9 +133,9 @@ async def main(
     if workspace_id is None:
         workspace_id = get_workspace_id()
 
-    global _downloaded_notebooks  # noqa: PLW0603
+    global _started_from_pytestmsfabric_main  # noqa: PLW0603
     await download_test_notebooks(workspace_id)
 
-    _downloaded_notebooks = True
+    _started_from_pytestmsfabric_main = True
 
     return pytest.main(args=args, plugins=plugins)

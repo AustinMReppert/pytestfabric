@@ -11,6 +11,7 @@ from azure.storage.filedatalake import (
 def upload_file(file: str, test_id: str, account: str, container: str, folder: str) -> None:
     """Upload a file to Azure Blob Storage."""
     credential = DefaultAzureCredential()
+
     account_url = f"https://{account}.dfs.core.windows.net"
     service_client = DataLakeServiceClient(account_url, credential=credential)
     file_system_client = service_client.get_file_system_client(container)

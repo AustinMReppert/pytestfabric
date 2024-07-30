@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytestmsfabric"
-version = "0.3.0"
+version = "0.3.7"
 description = ""
 authors = ["Austin M. Reppert <austinmreppert@gmail.com>"]
 readme = "README.md"
